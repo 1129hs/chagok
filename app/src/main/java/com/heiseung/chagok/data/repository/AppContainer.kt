@@ -2,17 +2,30 @@ package com.heiseung.chagok.data.repository
 
 import android.content.Context
 import com.heiseung.chagok.data.local.ChagokDatabase
+import com.heiseung.chagok.session.DriverSession
+import com.heiseung.chagok.vehicle.FakeVehicleDataSource
+import com.heiseung.chagok.vehicle.TripWatcher
+import com.heiseung.chagok.vehicle.VehicleDataSource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 // Spring의 Bean 주입 대신 쓰는 간단한 보관함, 앱 전체에서 하나만 생성
 class AppContainer private constructor(context: Context) {
 
     private val db = ChagokDatabase.get(context)
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val vehicleRepository = VehicleRepository(db.vehicleDao())
     val memberRepository = MemberRepository(db.memberDao())
     val tripRepository = TripRepository(db.tripDao())
     val handoverRepository = HandoverRepository(db.handoverDao(), db.tripDao())
     val settlementRepository = SettlementRepository(db.settlementDao(), db.tripDao(), db.memberDao())
+
+    // SDK 연결 전까지 가짜 차 사용
+    val vehicleDataSource: VehicleDataSource = FakeVehicleDataSource()
+    val session = DriverSession()
+    val tripWatcher = TripWatcher(appScope, vehicleDataSource, tripRepository, session)
 
     companion object {
         @Volatile

@@ -1,58 +1,45 @@
 package com.heiseung.chagok.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+// 차량 화면이라 라이트 고정, 기기 테마색(dynamic color)은 안 씀
+private val ChagokColors = lightColorScheme(
+    primary = Ink,
+    onPrimary = Paper,
+    background = Paper,
+    onBackground = Ink,
+    surface = Paper,
+    onSurface = Ink,
+    outline = Line
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
+// 디자인 시안 기준 가로 폭(dp). 앱 영역이 이 폭이 되도록 dp·sp를 같이 늘림
+// 값을 줄이면 전체가 더 커짐 (너무 줄이면 화면이 넘칠 수 있음)
+const val DESIGN_WIDTH_DP = 1440f
 
 @Composable
-fun ChagokTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
-    content: @Composable () -> Unit
-) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
+fun ChagokTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+        colorScheme = ChagokColors,
+        typography = Typography
+    ) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val base = LocalDensity.current
+            // 앱 영역이 시안보다 넓으면 그만큼 확대, 좁으면 그대로
+            val scale = (maxWidth.value / DESIGN_WIDTH_DP).coerceAtLeast(1f)
+            CompositionLocalProvider(
+                LocalDensity provides Density(base.density * scale, base.fontScale)
+            ) {
+                content()
+            }
+        }
+    }
 }

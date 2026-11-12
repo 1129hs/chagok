@@ -3,45 +3,25 @@ package com.heiseung.chagok
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
+import com.heiseung.chagok.data.repository.AppContainer
+import com.heiseung.chagok.ui.navigation.ChagokNavHost
 import com.heiseung.chagok.ui.theme.ChagokTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        val container = AppContainer.get(this)
+
+        // 처음 실행이면 차 정보 만들고, 기어 감시 시작
+        lifecycleScope.launch { container.vehicleRepository.ensureVehicle() }
+        container.tripWatcher.start()
+
         setContent {
             ChagokTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                ChagokNavHost(container)
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ChagokTheme {
-        Greeting("Android")
     }
 }
