@@ -30,13 +30,18 @@ class BoardingViewModel(private val container: AppContainer) : ViewModel() {
         // 시트 위치나 등록된 사람이 바뀔 때마다 다시 알아봄
         viewModelScope.launch {
             val seatFlow = container.vehicleDataSource.snapshot.map { it.seatPosition }.distinctUntilChanged()
-            combine(seatFlow, container.memberRepository.observeMembers()) { seat, _ -> seat }
-                .collect { seat ->
+            combine(
+                seatFlow,
+                container.memberRepository.observeMembers(),
+                container.vehicleRepository.observe()
+            ) { seat, _, vehicle -> seat to (vehicle?.autoDetectDriver ?: true) }
+                .collect { (seat, autoDetect) ->
                     val result = container.memberRepository.identify(seat)
                     _state.value = BoardingUiState(
                         loading = false,
                         seatPosition = seat,
-                        matched = result.matched,
+                        // 설정에서 끄면 항상 사람 고르기
+                        matched = if (autoDetect) result.matched else null,
                         members = result.candidates
                     )
                 }

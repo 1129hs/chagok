@@ -21,6 +21,14 @@ import com.heiseung.chagok.ui.components.MainTab
 import com.heiseung.chagok.ui.handover.HandoverScreen
 import com.heiseung.chagok.ui.handover.HandoverViewModel
 import com.heiseung.chagok.ui.placeholder.PlaceholderScreen
+import com.heiseung.chagok.ui.family.AddPersonScreen
+import com.heiseung.chagok.ui.family.AddPersonViewModel
+import com.heiseung.chagok.ui.family.FamilyScreen
+import com.heiseung.chagok.ui.family.FamilyViewModel
+import com.heiseung.chagok.ui.history.HistoryScreen
+import com.heiseung.chagok.ui.history.HistoryViewModel
+import com.heiseung.chagok.ui.settle.SettleScreen
+import com.heiseung.chagok.ui.settle.SettleViewModel
 import com.heiseung.chagok.vehicle.FakeVehicleDataSource
 import com.heiseung.chagok.vehicle.TripEvent
 
@@ -106,16 +114,32 @@ fun ChagokNavHost(container: AppContainer, nav: NavHostController = rememberNavC
         }
 
         composable(Routes.HISTORY) {
-            ChagokFrame(snapshot.gear, driver?.name, MainTab.HISTORY, onTab, debugActions = debug) { PlaceholderScreen("05 운행 기록") }
+            val vm: HistoryViewModel = viewModel { HistoryViewModel(container) }
+            val state by vm.state.collectAsState()
+            ChagokFrame(snapshot.gear, driver?.name, MainTab.HISTORY, onTab, debugActions = debug) {
+                HistoryScreen(state, vm)
+            }
         }
         composable(Routes.SETTLE) {
-            ChagokFrame(snapshot.gear, driver?.name, MainTab.SETTLE, onTab, debugActions = debug) { PlaceholderScreen("04 월간 정산") }
+            val vm: SettleViewModel = viewModel { SettleViewModel(container) }
+            val state by vm.state.collectAsState()
+            ChagokFrame(snapshot.gear, driver?.name, MainTab.SETTLE, onTab, debugActions = debug) {
+                SettleScreen(state, vm)
+            }
         }
         composable(Routes.FAMILY) {
-            ChagokFrame(snapshot.gear, driver?.name, MainTab.FAMILY, onTab, debugActions = debug) { PlaceholderScreen("06 가족 · 설정") }
+            val vm: FamilyViewModel = viewModel { FamilyViewModel(container) }
+            val state by vm.state.collectAsState()
+            ChagokFrame(snapshot.gear, driver?.name, MainTab.FAMILY, onTab, debugActions = debug) {
+                FamilyScreen(state, vm, onAddPerson = { nav.navigate(Routes.ADD_PERSON) })
+            }
         }
         composable(Routes.ADD_PERSON) {
-            ChagokFrame(snapshot.gear, driver?.name, null, onTab, onBack = { nav.popBackStack() }) { PlaceholderScreen("06-1 사람 추가") }
+            val vm: AddPersonViewModel = viewModel { AddPersonViewModel(container) }
+            val state by vm.state.collectAsState()
+            ChagokFrame(snapshot.gear, driver?.name, MainTab.FAMILY, onTab, onBack = { nav.popBackStack() }, debugActions = debug) {
+                AddPersonScreen(state, vm, onDone = { nav.popBackStack() })
+            }
         }
         composable(Routes.CHARGER) {
             ChagokFrame(snapshot.gear, driver?.name, null, onTab, onBack = { nav.popBackStack() }) { PlaceholderScreen("02-1 근처 충전소") }

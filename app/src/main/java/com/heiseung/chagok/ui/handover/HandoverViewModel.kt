@@ -8,6 +8,7 @@ import com.heiseung.chagok.data.repository.PendingHandover
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -25,7 +26,9 @@ class HandoverViewModel(private val container: AppContainer) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            val pending = container.handoverRepository.getPending()
+            // 설정에서 인계 메시지를 끄면 차 상태만
+            val showHandover = container.vehicleRepository.observe().first()?.showHandover ?: true
+            val pending = if (showHandover) container.handoverRepository.getPending() else null
             // 인계를 남긴 사람이 다시 타면 굳이 보여주지 않음
             val me = container.session.driver.value
             val visible = pending?.takeIf { me == null || it.from.id != me.id }

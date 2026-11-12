@@ -1,5 +1,6 @@
 package com.heiseung.chagok.ui.boarding
 
+import com.heiseung.chagok.ui.components.ieyo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,7 +68,7 @@ private fun Matched(member: MemberEntity, members: List<MemberEntity>, vm: Board
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         PillButton("네, 맞아요", onClick = { vm.confirm(member); onConfirmed() })
         members.filter { it.id != member.id }.forEach { other ->
-            LinkButton("${other.name}예요", onClick = { vm.confirm(other); onConfirmed() })
+            LinkButton(other.name.ieyo(), onClick = { vm.confirm(other); onConfirmed() })
         }
     }
 }

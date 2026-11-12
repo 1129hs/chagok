@@ -1,5 +1,6 @@
 package com.heiseung.chagok.ui.handover
 
+import com.heiseung.chagok.ui.components.iGa
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -91,7 +92,7 @@ fun ColumnScope.HandoverScreen(
         Box(Modifier.fillMaxSize().offset(x = carX)) {
             CarStatusScene(
                 title = "지금 차 상태예요",
-                sub = "${pending.from.name}가 넘겨준 차",
+                sub = "${pending.from.name.iGa()} 넘겨준 차",
                 status = pending.status,
                 energyLow = pending.energyLow,
                 trunkLuggage = HandoverTag.LUGGAGE in pending.tags,
@@ -122,7 +123,7 @@ private fun MessageScene(pending: PendingHandover, onConfirm: () -> Unit, onNext
                 Modifier.size(44.dp).background(Ink, CircleShape),
                 contentAlignment = Alignment.Center
             ) { Text(pending.from.name.take(1), color = Paper, fontSize = 19.sp, fontWeight = FontWeight.Bold) }
-            Text("${pending.from.name}가 남긴 말 · ${timeText(pending.createdAt)}", style = ChagokText.Label.copy(fontSize = 20.sp))
+            Text("${pending.from.name.iGa()} 남긴 말 · ${timeText(pending.createdAt)}", style = ChagokText.Label.copy(fontSize = 20.sp))
         }
         val headline = pending.message ?: tagText(pending.tags) ?: "차를 넘겨줬어요."
         Text(headline, style = ChagokText.Hero.copy(fontSize = 68.sp, lineHeight = 80.sp))
