@@ -1,6 +1,7 @@
 package com.heiseung.chagok.ui.handover
 
 import com.heiseung.chagok.ui.components.iGa
+import com.heiseung.chagok.ui.components.SpeakOnce
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -75,6 +76,14 @@ fun ColumnScope.HandoverScreen(
         )
         return
     }
+
+    // 탈 때 인계 메시지를 소리로 읽어줌
+    val spoken = buildList {
+        add("${pending.from.name.iGa()} 남긴 말이에요.")
+        pending.message?.let { add(it) }
+        addAll(pending.tags.map { tagLabel(it) })
+    }.joinToString(" ")
+    SpeakOnce(spoken)
 
     // 0 = 메시지, 1 = 차 상태
     var step by remember { mutableIntStateOf(0) }

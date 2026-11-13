@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
+// 음성 인계 진행 상태
+enum class VoiceState { IDLE, RECORDING, THINKING, FAILED, NO_SOUND }
+
 data class ArrivalUiState(
     val loading: Boolean = true,
     val driverName: String = "",
@@ -23,7 +26,10 @@ data class ArrivalUiState(
     val tags: Set<HandoverTag> = emptySet(),
     val message: String = "",
     // 남기기 끝 → 안내 문구 보여주는 중
-    val left: Boolean = false
+    val left: Boolean = false,
+    val voice: VoiceState = VoiceState.IDLE,
+    // AI가 받아쓴 원래 말 (확인용)
+    val heard: String? = null
 )
 
 class ArrivalViewModel(private val container: AppContainer, private val tripId: Long) : ViewModel() {
@@ -68,6 +74,61 @@ class ArrivalViewModel(private val container: AppContainer, private val tripId: 
         delay(1800)
         container.session.clear()
         onDone()
+    }
+
+    // "말로 남기기" 누름 → 녹음 시작
+    // 녹음 중 가장 큰 소리 (무음 녹음이면 AI를 부르지 않음)
+    private var peak = 0
+
+    fun startVoice() {
+        val started = runCatching { container.voiceRecorder.start() }
+        _state.update { it.copy(voice = if (started.isSuccess) VoiceState.RECORDING else VoiceState.FAILED) }
+        if (started.isFailure) return
+        peak = 0
+        viewModelScope.launch {
+            while (_state.value.voice == VoiceState.RECORDING) {
+                peak = maxOf(peak, container.voiceRecorder.peakAmplitude())
+                delay(200)
+            }
+        }
+    }
+
+    // "다 말했어요" → 녹음 끝, AI가 정리한 말과 한마디를 채워줌 (고칠 수 있음)
+    fun finishVoice() = viewModelScope.launch {
+        peak = maxOf(peak, container.voiceRecorder.peakAmplitude())
+        val file = container.voiceRecorder.stop()
+        if (file != null && peak < MIN_PEAK) {
+            android.util.Log.w("HandoverAi", "녹음이 무음 (peak=$peak)")
+            _state.update { it.copy(voice = VoiceState.NO_SOUND) }
+            return@launch
+        }
+        if (file == null) {
+            _state.update { it.copy(voice = VoiceState.FAILED) }
+            return@launch
+        }
+        _state.update { it.copy(voice = VoiceState.THINKING) }
+        val result = container.handoverAi.summarize(file).getOrNull()
+        if (result == null || result.transcript.isBlank()) {
+            _state.update { it.copy(voice = VoiceState.FAILED) }
+            return@launch
+        }
+        _state.update {
+            it.copy(
+                voice = VoiceState.IDLE,
+                message = result.message.ifBlank { result.transcript },
+                tags = it.tags + result.tags,
+                heard = result.transcript
+            )
+        }
+    }
+
+    companion object {
+        // 이보다 작으면 사실상 무음
+        private const val MIN_PEAK = 300
+    }
+
+    override fun onCleared() {
+        container.voiceRecorder.cancel()
     }
 
     // "그냥 내릴게요"

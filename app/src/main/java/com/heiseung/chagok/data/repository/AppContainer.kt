@@ -1,6 +1,9 @@
 package com.heiseung.chagok.data.repository
 
 import android.content.Context
+import com.heiseung.chagok.BuildConfig
+import com.heiseung.chagok.ai.HandoverAi
+import com.heiseung.chagok.ai.VoiceRecorder
 import com.heiseung.chagok.data.local.ChagokDatabase
 import com.heiseung.chagok.session.DriverSession
 import com.heiseung.chagok.vehicle.FakeVehicleDataSource
@@ -26,6 +29,10 @@ class AppContainer private constructor(context: Context) {
     val vehicleDataSource: VehicleDataSource = FakeVehicleDataSource()
     val session = DriverSession()
     val tripWatcher = TripWatcher(appScope, vehicleDataSource, tripRepository, session)
+
+    // 음성 인계
+    val voiceRecorder = VoiceRecorder(context.applicationContext)
+    val handoverAi = HandoverAi(BuildConfig.GEMINI_API_KEY)
 
     companion object {
         @Volatile

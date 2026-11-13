@@ -1,6 +1,21 @@
 package com.heiseung.chagok.ui.arrival
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import com.heiseung.chagok.ui.theme.ChipLine
+import com.heiseung.chagok.ui.theme.Paper
+import com.heiseung.chagok.ui.theme.Warn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -58,6 +73,7 @@ fun ColumnScope.ArrivalScreen(state: ArrivalUiState, viewModel: ArrivalViewModel
         Spacer(Modifier.width(80.dp))
         Column(Modifier.width(520.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Text("다음 사람에게 한마디", style = ChagokText.Title.copy(fontSize = 26.sp))
+            VoiceButton(state.voice, viewModel)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 tagLabels.forEach { (tag, label) ->
                     Chip(label, selected = tag in state.tags, onClick = { viewModel.toggleTag(tag) })
@@ -68,7 +84,7 @@ fun ColumnScope.ArrivalScreen(state: ArrivalUiState, viewModel: ArrivalViewModel
                 onValueChange = viewModel::setMessage,
                 placeholder = { Text("직접 쓰기", fontSize = 22.sp) },
                 textStyle = ChagokText.Item.copy(fontSize = 24.sp),
-                singleLine = true,
+                maxLines = 3,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
@@ -77,10 +93,57 @@ fun ColumnScope.ArrivalScreen(state: ArrivalUiState, viewModel: ArrivalViewModel
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
+            state.heard?.let { Text("들은 말: $it", style = ChagokText.Label, maxLines = 2) }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 PillButton("남기고 내리기", onClick = { viewModel.leave(onDone) })
                 LinkButton("그냥 내릴게요", onClick = { viewModel.skip(onDone) })
             }
+        }
+    }
+}
+
+// 말로 남기기: 누르면 녹음, 다시 누르면 AI가 정리
+@Composable
+private fun VoiceButton(voice: VoiceState, viewModel: ArrivalViewModel) {
+    val context = LocalContext.current
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) viewModel.startVoice()
+    }
+    val recording = voice == VoiceState.RECORDING
+    val label = when (voice) {
+        VoiceState.RECORDING -> "■  다 말했어요"
+        VoiceState.THINKING -> "정리하는 중…"
+        else -> "🎤  말로 남기기"
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedButton(
+            onClick = {
+                when (voice) {
+                    VoiceState.RECORDING -> viewModel.finishVoice()
+                    VoiceState.THINKING -> Unit
+                    else -> {
+                        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+                            PackageManager.PERMISSION_GRANTED
+                        if (granted) viewModel.startVoice() else permission.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+                }
+            },
+            enabled = voice != VoiceState.THINKING,
+            modifier = Modifier.height(56.dp),
+            shape = RoundedCornerShape(28.dp),
+            border = BorderStroke(2.dp, if (recording) Ink else ChipLine),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = if (recording) Ink else Paper,
+                contentColor = if (recording) Paper else Ink
+            ),
+            contentPadding = PaddingValues(horizontal = 24.dp)
+        ) { Text(label, style = ChagokText.Button) }
+
+        when (voice) {
+            VoiceState.RECORDING -> Text("듣고 있어요. 다 말하면 한 번 더 눌러주세요.", style = ChagokText.Label)
+            VoiceState.FAILED -> Text("잘 못 들었어요. 다시 말하거나 아래에 직접 써주세요.", style = ChagokText.Label.copy(color = Warn))
+            VoiceState.NO_SOUND -> Text("마이크 소리가 안 들어와요. 아래에 직접 써주세요.", style = ChagokText.Label.copy(color = Warn))
+            else -> Unit
         }
     }
 }
