@@ -30,6 +30,7 @@ import com.heiseung.chagok.ui.history.HistoryViewModel
 import com.heiseung.chagok.ui.settle.SettleScreen
 import com.heiseung.chagok.ui.settle.SettleViewModel
 import com.heiseung.chagok.vehicle.FakeVehicleDataSource
+import com.heiseung.chagok.vehicle.SeatTestControl
 import com.heiseung.chagok.vehicle.TripEvent
 
 object Routes {
@@ -56,14 +57,19 @@ fun ChagokNavHost(container: AppContainer, nav: NavHostController = rememberNavC
         }
     }
 
-    // 가짜 차일 때만 상단에 [출발] [도착] [시트 ±] 테스트 버튼
+    // 시연용 상단 버튼: 시트는 Virtual Console에 없어서 항상, [출발][도착]은 가짜 차일 때만
+    val seat = container.vehicleDataSource as? SeatTestControl
     val fake = container.vehicleDataSource as? FakeVehicleDataSource
-    val debug = if (fake == null) emptyList() else listOf(
-        "시트 -10" to { fake.setSeatPosition(snapshot.seatPosition - 10) },
-        "시트 +10" to { fake.setSeatPosition(snapshot.seatPosition + 10) },
-        "출발" to { fake.drive() },
-        "도착" to { fake.park() }
-    )
+    val debug = buildList<Pair<String, () -> Unit>> {
+        if (seat != null) {
+            add("시트 -10" to { seat.setSeatPosition(snapshot.seatPosition - 10) })
+            add("시트 +10" to { seat.setSeatPosition(snapshot.seatPosition + 10) })
+        }
+        if (fake != null) {
+            add("출발" to { fake.drive() })
+            add("도착" to { fake.park() })
+        }
+    }
 
     val onTab: (MainTab) -> Unit = { tab ->
         val route = when (tab) {

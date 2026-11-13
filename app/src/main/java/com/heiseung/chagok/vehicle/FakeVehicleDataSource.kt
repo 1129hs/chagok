@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.update
 import kotlin.math.max
 
 // SDK 연결 전 화면 흐름 테스트용 가짜 차
-class FakeVehicleDataSource : VehicleDataSource {
+class FakeVehicleDataSource : VehicleDataSource, SeatTestControl {
 
     private val _snapshot = MutableStateFlow(
         VehicleSnapshot(
@@ -23,7 +23,7 @@ class FakeVehicleDataSource : VehicleDataSource {
     )
     override val snapshot: StateFlow<VehicleSnapshot> = _snapshot.asStateFlow()
 
-    fun setSeatPosition(value: Int) = _snapshot.update { it.copy(seatPosition = value.coerceIn(0, 100)) }
+    override fun setSeatPosition(value: Int) = _snapshot.update { it.copy(seatPosition = value.coerceIn(0, 100)) }
 
     // 출발: P → D
     fun drive() = _snapshot.update { it.copy(gear = Gear.D, speedKmh = 40f) }

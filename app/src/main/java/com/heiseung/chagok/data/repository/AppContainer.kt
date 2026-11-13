@@ -7,6 +7,7 @@ import com.heiseung.chagok.ai.VoiceRecorder
 import com.heiseung.chagok.data.local.ChagokDatabase
 import com.heiseung.chagok.session.DriverSession
 import com.heiseung.chagok.vehicle.FakeVehicleDataSource
+import com.heiseung.chagok.vehicle.SdkVehicleDataSource
 import com.heiseung.chagok.vehicle.TripWatcher
 import com.heiseung.chagok.vehicle.VehicleDataSource
 import kotlinx.coroutines.CoroutineScope
@@ -25,8 +26,10 @@ class AppContainer private constructor(context: Context) {
     val handoverRepository = HandoverRepository(db.handoverDao(), db.tripDao())
     val settlementRepository = SettlementRepository(db.settlementDao(), db.tripDao(), db.memberDao())
 
-    // SDK 연결 전까지 가짜 차 사용
-    val vehicleDataSource: VehicleDataSource = FakeVehicleDataSource()
+    // 실제 차량 값(SDK) 사용, 화면 흐름만 볼 땐 false로 바꾸면 가짜 차 + [출발][도착] 버튼
+    val vehicleDataSource: VehicleDataSource =
+        if (USE_VEHICLE_SDK) SdkVehicleDataSource(context.applicationContext).also { it.start() }
+        else FakeVehicleDataSource()
     val session = DriverSession()
     val tripWatcher = TripWatcher(appScope, vehicleDataSource, tripRepository, session)
 
@@ -35,6 +38,8 @@ class AppContainer private constructor(context: Context) {
     val handoverAi = HandoverAi(BuildConfig.GEMINI_API_KEY)
 
     companion object {
+        const val USE_VEHICLE_SDK = true
+
         @Volatile
         private var instance: AppContainer? = null
 
