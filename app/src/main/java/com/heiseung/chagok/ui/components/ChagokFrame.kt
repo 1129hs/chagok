@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,12 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.heiseung.chagok.ui.theme.Body
 import com.heiseung.chagok.ui.theme.Ink
 import com.heiseung.chagok.ui.theme.Paper
 import com.heiseung.chagok.ui.theme.Sub
@@ -55,7 +55,7 @@ fun ChagokFrame(
     ) {
         TopBar(gear, driverName, onBack, debugActions)
         Column(modifier = Modifier.weight(1f).fillMaxWidth(), content = content)
-        if (currentTab != null) BottomMenu(currentTab, onTab) else Box(Modifier.height(72.dp))
+        if (currentTab != null) BottomMenu(currentTab, onTab) else Box(Modifier.height(84.dp))
     }
 }
 
@@ -74,33 +74,29 @@ private fun TopBar(
         }
     }
     Row(
-        modifier = Modifier.fillMaxWidth().height(84.dp),
+        modifier = Modifier.fillMaxWidth().height(100.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         if (onBack != null) {
-            Text("← 돌아가기", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Ink,
+            Text("← 돌아가기", fontSize = 26.sp, fontWeight = FontWeight.SemiBold, color = Ink,
                 modifier = Modifier.clickable(onClick = onBack).padding(vertical = 12.dp))
         } else {
-            Text("차곡", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Ink)
+            Text("차곡", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Ink)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.CenterVertically) {
-            // 가짜 차일 때만 보이는 테스트 버튼
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            // 시연용 버튼 (시트 위치 등)
             debugActions.forEach { (label, action) ->
-                Text("[$label]", fontSize = 16.sp, color = Sub, modifier = Modifier.clickable(onClick = action).padding(8.dp))
+                Text("[$label]", fontSize = 18.sp, color = Sub, modifier = Modifier.clickable(onClick = action).padding(8.dp))
             }
-            Text(
-                buildAnnotatedString {
-                    append(if (gear == Gear.P) "P 주차 중" else "${gear.name} 주행 중")
-                    if (driverName != null) {
-                        append(" · ")
-                        withStyle(SpanStyle(color = Ink, fontWeight = FontWeight.SemiBold)) { append(driverName) }
-                    }
-                    append(" · $time")
-                },
-                fontSize = 18.sp,
-                color = Sub
-            )
+            Text(if (gear == Gear.P) "P 주차 중" else "${gear.name} 주행 중", fontSize = 26.sp, color = Body)
+            // 지금 운전자: 이름 첫 글자 동그라미
+            if (driverName != null) {
+                Box(Modifier.size(44.dp).background(Ink, CircleShape), contentAlignment = Alignment.Center) {
+                    Text(driverName.take(1), color = Paper, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            Text(time, fontSize = 26.sp, color = Body)
         }
     }
 }
@@ -110,13 +106,13 @@ private fun BottomMenu(current: MainTab, onTab: (MainTab) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().height(84.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(40.dp)
+        horizontalArrangement = Arrangement.spacedBy(48.dp)
     ) {
         MainTab.entries.forEach { tab ->
             val selected = tab == current
             Text(
                 tab.label,
-                fontSize = 19.sp,
+                fontSize = 25.sp,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                 color = if (selected) Ink else Sub,
                 modifier = Modifier.clickable { onTab(tab) }.padding(vertical = 12.dp)
