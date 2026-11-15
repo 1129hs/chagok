@@ -83,18 +83,16 @@ adb forward tcp:8088 tcp:8088
 
 브라우저에서 `http://127.0.0.1:8088/` 접속 → Emulation Controls
 
+운전석 시트 위치는 Virtual Console에서 바꿀 수 없어, 앱 화면 위의 **[시트 ±10]** 버튼으로 바꿉니다.
+
 ### 마이크 (음성 인계)
 
 에뮬레이터 Extended Controls → Microphone → **Virtual microphone uses host audio input** 켜기
 
 ### 테스트 순서
 
-1. 앱 실행 → 운전자 등록 또는 확인
-2. Virtual Console에서 기어 **D** → ACCEL로 주행
-3. Emulation Controls에서 **Odometer**를 올리고 **Battery SOC**를 낮춤
-   (Virtual Console은 주행해도 주행거리·배터리가 자동으로 바뀌지 않아 직접 조절합니다. 슬라이더를 클릭한 뒤 방향키로 1씩 조절할 수 있습니다.)
-4. 기어 **P** → 하차 화면에서 한마디 선택 또는 🎤 말로 남기기
-5. 화면 위 **[시트 ±10]** 으로 운전석 위치를 바꿔 다른 운전자로 탑승
-6. 인계 메시지와 차 상태 확인 → 정산·기록 화면 확인
-
-운전석 시트 앞뒤 위치는 Virtual Console에서 바꿀 수 없어, 시연용으로 화면 위 버튼을 둡니다.
+1. **[시트 ±10]** 으로 위치를 맞추고 운전자 등록
+2. Virtual Console에서 기어 **D** → Odometer 올리고 Battery SOC 낮추기
+3. 기어 **P** → 하차 화면에서 한마디 남기기
+4. **[시트 ±10]** 으로 위치를 바꿔 다른 운전자로 탑승 → 인계 확인
+5. 정산·기록 화면 확인
